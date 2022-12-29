@@ -34,11 +34,6 @@ export class Node {
             child.parent = this;
         }
         this.parent = null;
-
-        this.aabb = {
-            min: [-10, -10, -10],
-            max: [10, 10, 10],
-        }
     }
 
     updateTransformationComponents() {

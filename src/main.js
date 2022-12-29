@@ -23,11 +23,13 @@ export class App extends Application {
             throw new Error('Camera node does not contain a camera reference');
         }
 
-        // only left wall for now
-        this.aabbs = [{
-            max: [-4, 2.5, 5],
-            min: [-4.086603, 0, -5],
-        }];
+        // list of every AABB (Axis-Aligned Bounding Box)
+        this.aabbs = [{ max: [-4, 2.5, 5.086603], min: [-4.086603, 0, -5.086603]},   // Left wall
+                      { max: [4.086603, 2.5, 5.086603], min: [4, 0, -5.086603]},          // Right wall
+                      { max: [-0.45, 2.5, -5], min: [-4, 0, -5.086603]},   // Front-Left wall
+                      { max: [4, 2.5, -5], min: [0.45, 0, -5.086603]},     // Front-Right wall
+                      { max: [-0.45, 2.5, 5.086603], min: [-4, 0, 5]},     // Back-Left wall
+                      { max: [4, 2.5, 5.086603], min: [0.45, 0, 5]}];      // Back-Right wall
 
         // dt variables
         this.time = performance.now();
@@ -49,7 +51,7 @@ export class App extends Application {
 
         if (!pause) {
             this.controller.update(dt);
-            this.physics.update(dt);
+            this.physics.update();
         }
     }
 
