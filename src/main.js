@@ -1,15 +1,16 @@
 import { FirstPersonController } from "/common/engine/FirstPersonController.js";
 import { Application } from '../common/engine/Application.js';
-import { GUI } from "../lib/dat.gui.module.js";
 import { GLTFLoader } from './GLTFLoader.js';
+import { GUI } from "/lib/dat.gui.module.js";
 import { Renderer } from './Renderer.js';
+import { pause } from "/src/seminarbot.js";
 import { Physics } from "./Physics.js";
 
-class App extends Application {
+export class App extends Application {
 
     async start() {
         this.loader = new GLTFLoader();
-        await this.loader.load('../common/models/basic-box/basic-box-v2.gltf');
+        await this.loader.load('../common/models/svet/seminar-bot-svet.gltf');
 
         this.scene = await this.loader.loadScene(this.loader.defaultScene);
         this.camera = await this.loader.loadNode('Camera_Orientation');
@@ -22,28 +23,35 @@ class App extends Application {
             throw new Error('Camera node does not contain a camera reference');
         }
 
+        // only left wall for now
+        this.aabbs = [{
+            max: [-4, 2.5, 5],
+            min: [-4.086603, 0, -5],
+        }];
+
         // dt variables
         this.time = performance.now();
         this.startTime = this.time;
 
         this.controller = new FirstPersonController(this.camera, this.canvas);
-        this.physics = new Physics(this.scene, this.controller);
+        this.physics = new Physics(this.scene, this.controller, this.aabbs);
 
         this.renderer = new Renderer(this.gl);
         this.renderer.prepareScene(this.scene);
         this.resize();
     }
 
-
     update() {
+        // this cannot be in the if statement, because then the player would be teleported when resuming again (df is a much bigger num then)
         this.time = performance.now();
         const dt = (this.time - this.startTime) * 0.001;
         this.startTime = this.time;
 
-        // this.controller.update(dt);
-        this.physics.update(dt);
+        if (!pause) {
+            this.controller.update(dt);
+            this.physics.update(dt);
+        }
     }
-
 
     render() {
         if (this.renderer) {
@@ -61,10 +69,9 @@ class App extends Application {
             this.camera.camera.updateMatrix();
         }
     }
-
 }
 
-const canvas = document.querySelector('canvas');
+const canvas = document.getElementById('gameCanvas');
 const app = new App(canvas);
 await app.init();
 document.querySelector('.loader-container').remove();

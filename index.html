@@ -10,14 +10,43 @@
 
   <script type="text/javascript" src="/lib/gl-matrix-min.js"></script>
   <script type="text/javascript" src="/lib/dat.gui.min.js"></script>
-  <script type="module" src="src/main.js"></script>
+  <script type="module" src="/src/seminarbot.js"></script>
 </head>
 <body>
-<div class="fullscreen no-touch">
-  <canvas></canvas>
-</div>
-<div class="fullscreen overlay loader-container">
-  <div class="loader"></div>
-</div>
+
+  <div id="startDiv">
+    <div class="game-menu">
+      <h1>SeminarBot</h1>
+      <div class="menu-item">
+        <button id="startButton">Start Game</button>
+      </div>
+      <div class="menu-item">
+        <button id="settingsButton">Settings</button>
+      </div>
+      <div class="menu-item">
+        <button id="aboutButton">About</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pauseDiv">
+    <div class="game-menu">
+      <h1>Pause menu</h1>
+      <div class="menu-item">
+        <button id="resumeButton">Resume game</button>
+      </div>
+      <div class="menu-item">
+        <button id="quitButton">Quit game</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="gameDiv" class="fullscreen no-touch">
+    <canvas id="gameCanvas"></canvas>
+  </div>
+
+  <div id="loaderDiv" class="fullscreen overlay loader-container">
+    <div class="loader"></div>
+  </div>
 </body>
 </html>

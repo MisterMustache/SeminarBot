@@ -1,10 +1,12 @@
 import { quat, vec3 } from '../../lib/gl-matrix-module.js';
+import { pause, escapePressedOnceExport } from "../../src/seminarbot.js";
 
 export class FirstPersonController {
 
     constructor(node, domElement) {
         this.node = node;
         this.domElement = domElement;
+        this.inFocus = false;
 
         this.keys = {};
 
@@ -15,13 +17,15 @@ export class FirstPersonController {
         this.acceleration = 20;
         this.maxSpeed = 5;                  // absolute max speed while sprinting
         this.allowedSpeed = this.maxSpeed * 0.7;  // relative speed (if walking or running)
-        this.decay = 0.95;
+        this.decay = 0.995;
         this.pointerSensitivity = 0.002;
 
         this.initHandlers();
     }
 
     initHandlers() {
+        const resumeButton = document.getElementById('resumeButton');
+
         this.pointermoveHandler = this.pointermoveHandler.bind(this);
         this.keydownHandler = this.keydownHandler.bind(this);
         this.keyupHandler = this.keyupHandler.bind(this);
@@ -29,15 +33,31 @@ export class FirstPersonController {
         const element = this.domElement;
         const doc = element.ownerDocument;
 
+        // event for the escape key being pressed
+        const escapeKey = new KeyboardEvent("keydown", {
+            bubbles: true,
+            cancelable: true,
+            key: 'Escape'
+        });
+
         doc.addEventListener('keydown', this.keydownHandler);
         doc.addEventListener('keyup', this.keyupHandler);
 
-        element.addEventListener('click', _ => element.requestPointerLock());
+        element.addEventListener('click', _ =>  {
+            element.requestPointerLock();
+            this.inFocus = true;
+        });
+
         doc.addEventListener('pointerlockchange', _ => {
             if (doc.pointerLockElement === element) {
                 doc.addEventListener('pointermove', this.pointermoveHandler);
+                resumeButton.click();   // would be the same as clicking the resume button
+                this.inFocus = false;
             } else {
                 doc.removeEventListener('pointermove', this.pointermoveHandler);
+                document.dispatchEvent(escapeKey);  // simulate pressing escape key again to get pause menu
+                escapePressedOnceExport.value = true;           // correct this variable, if game was in focus
+                this.inFocus = false;
             }
         });
     }
@@ -98,7 +118,6 @@ export class FirstPersonController {
         quat.rotateY(rotation, rotation, this.yaw);
         quat.rotateX(rotation, rotation, this.pitch);
         this.node.rotation = rotation;
-
     }
 
     pointermoveHandler(e) {
@@ -125,6 +144,12 @@ export class FirstPersonController {
 
     keydownHandler(e) {
         this.keys[e.code] = true;
+
+        // only gets requested once after getting from paused state (either by clicking or pressing any button)
+        if (!this.inFocus && !pause) {
+            this.domElement.requestPointerLock();
+            this.inFocus = true;
+        }
     }
 
     keyupHandler(e) {
