@@ -75,6 +75,11 @@ button {
     margin-right: 16px;
 }
 
+#versionDiv {
+    position: relative;
+    z-index: 1;
+}
+
 .hidden {
     display: none;
 }
@@ -90,7 +95,16 @@ button {
     height: 100%;
 }
 
-.overlay {
+.version-overlay {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0);
+    color: white;
+    padding: 10px;
+}
+
+.loader-overlay {
     position: fixed;
     left: 0;
     top: 0;

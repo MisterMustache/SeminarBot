@@ -17,8 +17,8 @@ const loaderDiv = document.getElementById("loaderDiv");
 // const gameCanvas = document.getElementById("gameCanvas");
 
 const startButton = document.getElementById("startButton");
-const quitButton = document.getElementById("quitButton");
 const resumeButton = document.getElementById('resumeButton');
+const quitButton = document.getElementById("quitButton");
 
 pauseDiv.style.display = "none";
 loaderDiv.style.display = "none";
@@ -40,16 +40,15 @@ startButton.addEventListener("click", function() {
     // gameCanvas.requestPointerLock();     // locks pointer, but drops framerate for some reason
 });
 
-quitButton.addEventListener("click", function() {
-    // simply reload
-    location.reload();
-});
-
 resumeButton.addEventListener("click", function() {
     pauseDiv.style.display = "none";
     gameDiv.style.display = "block";
     pause = false;
     // gameCanvas.requestPointerLock();
+});
+
+quitButton.addEventListener("click", function() {
+    location.reload();      // simply reload (big brain solution)
 });
 
 document.addEventListener('keydown', function(event) {

@@ -12,8 +12,8 @@
   <script type="text/javascript" src="/lib/dat.gui.min.js"></script>
   <script type="module" src="/src/seminarbot.js"></script>
 </head>
-<body>
 
+<body>
   <div id="startDiv">
     <div class="game-menu">
       <h1>SeminarBot</h1>
@@ -24,7 +24,9 @@
         <button id="settingsButton">Settings</button>
       </div>
       <div class="menu-item">
-        <button id="aboutButton">About</button>
+        <a href="https://github.com/MisterMustache/SeminarBot">
+          <button id="aboutButton">About</button>
+        </a>
       </div>
     </div>
   </div>
@@ -41,11 +43,15 @@
     </div>
   </div>
 
-  <div id="gameDiv" class="fullscreen no-touch">
+  <div class="version-overlay">
+    <div>v0.2.1-alpha (2022-12-30)</div>
+  </div>
+
+  <div id="gameDiv" class="fullscreen">
     <canvas id="gameCanvas"></canvas>
   </div>
 
-  <div id="loaderDiv" class="fullscreen overlay loader-container">
+  <div id="loaderDiv" class="fullscreen loader-overlay loader-container">
     <div class="loader"></div>
   </div>
 </body>
