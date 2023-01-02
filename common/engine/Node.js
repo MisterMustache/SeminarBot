@@ -26,6 +26,7 @@ export class Node {
         this.transformationMatrixNeedsUpdate = false;
         this.transformationComponentsNeedUpdate = false;
 
+        this.name = options.name || "placeholder";
         this.camera = options.camera || null;
         this.mesh = options.mesh || null;
 

@@ -1,23 +1,27 @@
-import { quat, vec3 } from '../../lib/gl-matrix-module.js';
 import { pause, escapePressedOnceExport } from "../../src/seminarbot.js";
+import { quat, vec3 } from '../../lib/gl-matrix-module.js';
+import { removeNodeFromScene } from "../../src/main.js";
+import { Physics } from "../../src/Physics.js";
 
 export class FirstPersonController {
 
-    constructor(node, domElement) {
+    constructor(node, domElement, doors, items) {
         this.node = node;
         this.domElement = domElement;
-        this.inFocus = false;
 
+        this.inFocus = false;
         this.keys = {};
+
+        this.doors = doors;
+        this.items = items;
 
         this.pitch = 0;
         this.yaw = 0;
-
         this.velocity = [0, 0, 0];
         this.acceleration = 20;
         this.maxSpeed = 5;                  // absolute max speed while sprinting
         this.allowedSpeed = this.maxSpeed * 0.7;  // relative speed (if walking or running)
-        this.decay = 0.995;
+        this.decay = 0.996;
         this.pointerSensitivity = 0.002;
 
         this.initHandlers();
@@ -150,10 +154,25 @@ export class FirstPersonController {
             this.domElement.requestPointerLock();
             this.inFocus = true;
         }
+
+        if (this.keys['KeyE']) {
+            for (const door of this.doors) {
+                if (Physics.checkCollision(this.node, door.globalInteractionAABB, 1).collision) {
+                    console.log(door.node.name + " opened: " + door.opened)
+                    door.changeDoorState();
+                }
+            }
+            for (const item of this.items) {
+                if (!item.pickedUp && Physics.checkCollision(this.node, item.globalInteractionAABB, 0.5).collision) {
+                    console.log("picked up " + item.node.name);
+                    removeNodeFromScene(item.node.name);
+                    item.pickedUp = true;
+                }
+            }
+        }
     }
 
     keyupHandler(e) {
         this.keys[e.code] = false;
     }
-
 }

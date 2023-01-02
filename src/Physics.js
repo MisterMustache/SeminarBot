@@ -1,24 +1,17 @@
-// import {vec3} from '../lib/gl-matrix-module.js';
+import { vec3 } from "../lib/gl-matrix-module.js";
 
 export class Physics {
 
-    constructor(scene, controller, aabbs) {
+    constructor(scene, controller, fixedAABBs, doors, items) {
         this.scene = scene;
         this.controller = controller;
-        this.aabbs = aabbs;
-        this.radius = 0.3;
+        this.fixedAABBs = fixedAABBs;   // every AABB that is static and used for actual collision
+        this.doors = doors;
+        this.items = items;
+        this.collisionRadius = 0.3;
     }
 
-    update() {
-        if (this.controller.velocity !== undefined) {
-            // check camera sphere against every other AABB
-            for (const aabb of this.aabbs) {
-                this.resolveCollision(this.controller.node, aabb)
-            }
-        }
-    }
-
-    intersectDistance(sphere, box) {
+    static intersectDistance(sphere, box) {
         // get the closest point (of the box) to sphere center by clamping
         const x = Math.max(box.min[0], Math.min(sphere[0], box.max[0]));
         const y = Math.max(box.min[1], Math.min(sphere[1], box.max[1]));
@@ -32,17 +25,24 @@ export class Physics {
         );
     }
 
-    resolveCollision(sphere, aabb) {
+    static checkCollision(sphere, aabb, radius) {
+        // returns boolean and the distance
         const sphereCoords = sphere.translation;
-        const distance = this.intersectDistance(sphereCoords, aabb);
+        const distance = Physics.intersectDistance(sphereCoords, aabb);
+        return { collision: distance <= radius, distance: distance };
+    }
+
+    static resolveCollision(sphere, aabb, radius) {
+        const { collision, distance } = Physics.checkCollision(sphere, aabb, radius)
 
         // if there is no collision (distance from the closest point is smaller than radius)
-        if (distance > this.radius) {
+        if (!collision) {
             return;
         }
 
         // how much the sphere penetrates the AABB
-        const penetrationDepth = this.radius - distance;
+        let sphereCoords = sphere.translation;
+        const penetrationDepth = radius - distance;
 
         // update translation vector by moving a tiny amount away from the collision box
         for (let i = 0; i < 3; i++) {
@@ -55,4 +55,40 @@ export class Physics {
         }
         sphere.translation = sphereCoords;
     }
+
+    update() {
+        if (this.controller.velocity !== undefined) {
+            // check camera sphere against every other AABB
+            for (const aabb of this.fixedAABBs) {
+                Physics.resolveCollision(this.controller.node, aabb, this.collisionRadius)
+            }
+            for (const door of this.doors) {
+                Physics.resolveCollision(this.controller.node, door.activeCollisionAABB, this.collisionRadius)
+            }
+        }
+    }
+
+    static getTransformedAABB(node, aabb) {
+        // Transform all vertices of the AABB from local to global space.
+        const transform = node.globalMatrix;
+        const { min, max } = aabb;
+        const vertices = [
+            [min[0], min[1], min[2]],
+            [min[0], min[1], max[2]],
+            [min[0], max[1], min[2]],
+            [min[0], max[1], max[2]],
+            [max[0], min[1], min[2]],
+            [max[0], min[1], max[2]],
+            [max[0], max[1], min[2]],
+            [max[0], max[1], max[2]],
+        ].map(v => vec3.transformMat4(v, v, transform));
+
+        // Find new min and max by component.
+        const xs = vertices.map(v => v[0]);
+        const ys = vertices.map(v => v[1]);
+        const zs = vertices.map(v => v[2]);
+        const newMin = [Math.min(...xs), Math.min(...ys), Math.min(...zs)];
+        const newMax = [Math.max(...xs), Math.max(...ys), Math.max(...zs)];
+        return { min: newMin, max: newMax };
+    };
 }

@@ -2,18 +2,51 @@ import { FirstPersonController } from "/common/engine/FirstPersonController.js";
 import { Application } from '../common/engine/Application.js';
 import { GLTFLoader } from './GLTFLoader.js';
 import { GUI } from "/lib/dat.gui.module.js";
-import { Renderer } from './Renderer.js';
 import { pause } from "/src/seminarbot.js";
+import { Renderer } from './Renderer.js';
 import { Physics } from "./Physics.js";
+import { Door } from "./Door.js";
+import { Item } from "./Item.js";
 
 export class App extends Application {
 
-    async start() {
+    async loadWorld() {
         this.loader = new GLTFLoader();
-        await this.loader.load('../common/models/svet/seminar-bot-svet.gltf');
 
+        // main world scene and camera
+        await this.loader.load('/common/models/svet/seminar-bot-svet.gltf');
         this.scene = await this.loader.loadScene(this.loader.defaultScene);
         this.camera = await this.loader.loadNode('Camera_Orientation');
+
+        // door scene, that gets added to main scene
+        await this.loader.load('/common/models/door/seminar-bot-door.gltf');
+        this.doors = await this.loader.loadScene(this.loader.defaultScene);
+        this.scene.combineScenes(this.doors);
+
+        // pickup item scene, that also gets added to main scene
+        await this.loader.load('/common/models/item/seminar-bot-item.gltf');
+        this.items = await this.loader.loadScene(this.loader.defaultScene);
+        this.scene.combineScenes(this.items);
+
+        // transform to Door and Item objects
+        this.doors = Door.createDoorsFromScene(this.doors);
+        this.items = Item.createItemsFromScene(this.items);
+    }
+
+    removeNodeFromScene(nodeName) {
+        // skip the given node by name
+        let nodes = [];
+        for (const sceneNode of this.scene.nodes) {
+            if (nodeName !== sceneNode.name) {
+                nodes.push(sceneNode);
+            }
+        }
+        this.scene.nodes = nodes;
+        this.physics.scene.nodes = nodes;    // correct the physics scene
+    }
+
+    async start() {
+        await this.loadWorld();     // loads every gltf model
 
         if (!this.scene || !this.camera) {
             throw new Error('Scene or Camera not present in glTF');
@@ -23,9 +56,9 @@ export class App extends Application {
             throw new Error('Camera node does not contain a camera reference');
         }
 
-        // list of every AABB (Axis-Aligned Bounding Box)
-        this.aabbs = [{ max: [-4, 2.5, 5.086603], min: [-4.086603, 0, -5.086603]},   // Left wall
-                      { max: [4.086603, 2.5, 5.086603], min: [4, 0, -5.086603]},          // Right wall
+        // list of every fixed AABB for collision (Axis-Aligned Bounding Box)
+        this.fixedAABBs = [{ max: [-4, 2.5, 5.086603], min: [-4.086603, 0, -5.086603]},     // Left wall
+                      { max: [4.086603, 2.5, 5.086603], min: [4, 0, -5.086603]},            // Right wall
                       { max: [-0.45, 2.5, -5], min: [-4, 0, -5.086603]},   // Front-Left wall
                       { max: [4, 2.5, -5], min: [0.45, 0, -5.086603]},     // Front-Right wall
                       { max: [-0.45, 2.5, 5.086603], min: [-4, 0, 5]},     // Back-Left wall
@@ -35,12 +68,18 @@ export class App extends Application {
         this.time = performance.now();
         this.startTime = this.time;
 
-        this.controller = new FirstPersonController(this.camera, this.canvas);
-        this.physics = new Physics(this.scene, this.controller, this.aabbs);
+        // movement and collision detection
+        this.controller = new FirstPersonController(this.camera, this.canvas, this.doors, this.items);
+        this.physics = new Physics(this.scene, this.controller, this.fixedAABBs, this.doors, this.items);
 
         this.renderer = new Renderer(this.gl);
         this.renderer.prepareScene(this.scene);
         this.resize();
+
+        console.log("Loaded nodes:")
+        for(const node of this.scene.nodes) {
+            console.log(node.name)
+        }
     }
 
     update() {
@@ -83,3 +122,9 @@ gui.add(app.controller, 'pointerSensitivity', 0.0001, 0.01);
 gui.add(app.controller, 'maxSpeed', 0, 10);
 gui.add(app.controller, 'decay', 0, 1);
 gui.add(app.controller, 'acceleration', 1, 100);
+gui.add(app.physics, 'collisionRadius', 0.01, 5)
+gui.close();
+
+export function removeNodeFromScene(node) {
+    app.removeNodeFromScene(node);
+}

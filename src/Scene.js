@@ -25,4 +25,8 @@ export class Scene {
             after(node);
         }
     }
+
+    combineScenes(newScene) {
+        this.nodes = this.nodes.concat(newScene.nodes)
+    }
 }
