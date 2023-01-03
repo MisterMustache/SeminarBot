@@ -9,8 +9,8 @@ const localInteractionAABB = {
 
 // used only for collision, and it changes from closed to open state
 const localCollisionAABB = {
-    max: [1, 1.05, 0.086603],
-    min: [-1, -1.05, -0.086603]
+    max: [0.9, 1.05, 0.086603],
+    min: [-0.9, -1.05, -0.086603]
 };
 
 export class Door {
@@ -19,10 +19,7 @@ export class Door {
         this.opened = false;
         this.angle = 160;
 
-        // global interaction AABB
         this.globalInteractionAABB = Physics.getTransformedAABB(this.node, localInteractionAABB);
-
-        // global collision AABB
         this.activeCollisionAABB = Physics.getTransformedAABB(this.node, localCollisionAABB);
     }
 
@@ -39,8 +36,6 @@ export class Door {
         this.opened = !this.opened;
         this.node.updateTransformationMatrix();
         this.activeCollisionAABB = Physics.getTransformedAABB(this.node, localCollisionAABB);   // change collision box
-
-        console.log(this.node.name + " rotation: " + this.node.rotation);
     }
 
     static createDoorsFromScene(scene) {    // simple list of Door objects, that have multiple AABB and current state

@@ -95,6 +95,23 @@ button {
     height: 100%;
 }
 
+#staminaDiv {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    bottom: 10%;
+    left: 20%;
+    width: 60%;
+    height: 5px;
+    padding: 0;
+}
+
+#stamina-inner {
+    background-color: rgba(89, 89, 89, 0.5);
+    height: 100%;
+    width: 100%;
+}
+
 .version-overlay {
     position: absolute;
     bottom: 0;

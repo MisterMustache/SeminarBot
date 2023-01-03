@@ -11,7 +11,6 @@ export class Item {
         this.node = node;
         this.pickedUp = false;
 
-        // global interaction AABB
         this.globalInteractionAABB = Physics.getTransformedAABB(this.node, localInteractionAABB);
     }
 

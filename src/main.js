@@ -7,6 +7,7 @@ import { Renderer } from './Renderer.js';
 import { Physics } from "./Physics.js";
 import { Door } from "./Door.js";
 import { Item } from "./Item.js";
+import { HUD } from "./HUD.js";
 
 export class App extends Application {
 
@@ -71,6 +72,7 @@ export class App extends Application {
         // movement and collision detection
         this.controller = new FirstPersonController(this.camera, this.canvas, this.doors, this.items);
         this.physics = new Physics(this.scene, this.controller, this.fixedAABBs, this.doors, this.items);
+        this.HUD = new HUD();
 
         this.renderer = new Renderer(this.gl);
         this.renderer.prepareScene(this.scene);
@@ -91,6 +93,10 @@ export class App extends Application {
         if (!pause) {
             this.controller.update(dt);
             this.physics.update();
+            this.HUD.staminaPercentage((this.controller.sprintDuration / this.controller.sprintDurationMax) * 100)
+        }
+        else {
+            this.controller.refreshTime();
         }
     }
 
@@ -118,11 +124,22 @@ await app.init();
 document.querySelector('.loader-container').remove();
 
 const gui = new GUI();
-gui.add(app.controller, 'pointerSensitivity', 0.0001, 0.01);
-gui.add(app.controller, 'maxSpeed', 0, 10);
-gui.add(app.controller, 'decay', 0, 1);
-gui.add(app.controller, 'acceleration', 1, 100);
-gui.add(app.physics, 'collisionRadius', 0.01, 5)
+const general = gui.addFolder('General');
+general.open();
+general.add(app.controller, 'pointerSensitivity', 0.0001, 0.01);
+general.add(app.physics, 'collisionRadius', 0, 4)
+const interaction = gui.addFolder('Interaction');
+interaction.open();
+interaction.add(app.controller, 'distanceToDoorAABB', 0, 10);
+interaction.add(app.controller, 'distanceToItemAABB', 0, 10);
+const movement = gui.addFolder('Movement');
+movement.open();
+movement.add(app.controller, 'maxSpeed', 0, 10);
+movement.add(app.controller, 'decay', 0, 1);
+movement.add(app.controller, 'acceleration', 1, 100);
+movement.add(app.controller, 'sprintDurationMax', 1000, 30000);
+movement.add(app.controller, 'sprintToWalkRatio', 0.01, 1)
+movement.add(app.controller, 'staminaRecoveryFactor', 0.1, 10)
 gui.close();
 
 export function removeNodeFromScene(node) {

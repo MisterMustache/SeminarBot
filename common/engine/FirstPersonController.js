@@ -6,23 +6,37 @@ import { Physics } from "../../src/Physics.js";
 export class FirstPersonController {
 
     constructor(node, domElement, doors, items) {
+        // general
         this.node = node;
         this.domElement = domElement;
-
-        this.inFocus = false;
-        this.keys = {};
-
         this.doors = doors;
         this.items = items;
 
+        // current state
+        this.inFocus = false;
+        this.keys = {};
+        this.time = 0;      // gets refreshed in every update call
+
+        // looking around
         this.pitch = 0;
         this.yaw = 0;
+        this.pointerSensitivity = 0.002;
+
+        // interaction radius (how close you need to be, to register an interaction)
+        this.distanceToDoorAABB = 1;
+        this.distanceToItemAABB = 0.5;
+
+        // movement speed
         this.velocity = [0, 0, 0];
         this.acceleration = 20;
-        this.maxSpeed = 5;                  // absolute max speed while sprinting
-        this.allowedSpeed = this.maxSpeed * 0.7;  // relative speed (if walking or running)
+        this.maxSpeed = 5;              // absolute max speed while sprinting
+        this.sprintToWalkRatio = 0.6;
+        this.allowedSpeed = this.maxSpeed * this.sprintToWalkRatio;  // relative speed (if walking or running)
         this.decay = 0.996;
-        this.pointerSensitivity = 0.002;
+        this.startedSprinting = false;
+        this.sprintDurationMax = 10000;  // max sprint time in milliseconds, before needing to slow down
+        this.sprintDuration = this.sprintDurationMax;  // actual sprint time in ms (can change based on 'tiredness')
+        this.staminaRecoveryFactor = 1.5;  // how fast stamina is recovered (1.5 means 1.5x faster compared to losing it)
 
         this.initHandlers();
     }
@@ -66,7 +80,13 @@ export class FirstPersonController {
         });
     }
 
+    refreshTime() {
+        this.time = performance.now();
+    }
+
     update(dt) {
+        const timeNow = performance.now();
+
         // Calculate forward and right vectors.
         const cos = Math.cos(this.yaw);
         const sin = Math.sin(this.yaw);
@@ -87,11 +107,36 @@ export class FirstPersonController {
         if (this.keys['KeyA']) {
             vec3.sub(acc, acc, right);
         }
+
+        // sprinting functionality
         if (this.keys['ShiftLeft']) {
-            this.allowedSpeed = this.maxSpeed;
+            if (!this.startedSprinting) {
+                this.allowedSpeed = this.maxSpeed;
+                this.startedSprinting = true;
+                this.time = timeNow;
+            }
+            else {
+                if (this.sprintDuration <= 0) {
+                    this.allowedSpeed = this.maxSpeed * this.sprintToWalkRatio;
+                    this.sprintDuration = 0;
+                }
+                else {
+                    this.sprintDuration -= (timeNow - this.time);
+                }
+            }
         }
-        else {
-            this.allowedSpeed = this.maxSpeed * 0.6;
+
+        // if stop sprinting
+        if (!this.keys['ShiftLeft']) {
+            // if stopped right after sprinting (only gets executed once)
+            if (this.startedSprinting) {
+                this.allowedSpeed = this.maxSpeed * this.sprintToWalkRatio;
+                this.startedSprinting = false;
+            }
+            this.sprintDuration += (timeNow - this.time) * this.staminaRecoveryFactor;
+            if (this.sprintDuration > this.sprintDurationMax) {
+                this.sprintDuration = this.sprintDurationMax;
+            }
         }
 
         // Update velocity based on acceleration.
@@ -122,6 +167,8 @@ export class FirstPersonController {
         quat.rotateY(rotation, rotation, this.yaw);
         quat.rotateX(rotation, rotation, this.pitch);
         this.node.rotation = rotation;
+
+        this.time = timeNow;
     }
 
     pointermoveHandler(e) {
@@ -155,15 +202,15 @@ export class FirstPersonController {
             this.inFocus = true;
         }
 
+        // door and item interaction
         if (this.keys['KeyE']) {
             for (const door of this.doors) {
-                if (Physics.checkCollision(this.node, door.globalInteractionAABB, 1).collision) {
-                    console.log(door.node.name + " opened: " + door.opened)
+                if (Physics.checkCollision(this.node, door.globalInteractionAABB, this.distanceToDoorAABB).collision) {
                     door.changeDoorState();
                 }
             }
             for (const item of this.items) {
-                if (!item.pickedUp && Physics.checkCollision(this.node, item.globalInteractionAABB, 0.5).collision) {
+                if (!item.pickedUp && Physics.checkCollision(this.node, item.globalInteractionAABB, this.distanceToItemAABB).collision) {
                     console.log("picked up " + item.node.name);
                     removeNodeFromScene(item.node.name);
                     item.pickedUp = true;
