@@ -96,7 +96,7 @@ export class App extends Application {
             this.HUD.staminaPercentage((this.controller.sprintDuration / this.controller.sprintDurationMax) * 100)
         }
         else {
-            this.controller.refreshTime();
+            this.controller.refreshTime();  // needs to be refreshed, so the stamina bar works properly (relies on time)
         }
     }
 

@@ -1,3 +1,4 @@
+import { AudioPlayer } from "./AudioPlayer.js";
 import { Physics } from "./Physics.js";
 
 // used only for detecting if player is near the item
@@ -12,6 +13,15 @@ export class Item {
         this.pickedUp = false;
 
         this.globalInteractionAABB = Physics.getTransformedAABB(this.node, localInteractionAABB);
+        this.pickupSound = new AudioPlayer("/common/sounds/pickup_note.mp3");
+        this.pickupSound.volume(50);
+    }
+
+    pickup() {
+        if (!this.pickedUp) {
+            this.pickedUp = true;
+            this.pickupSound.play();
+        }
     }
 
     static createItemsFromScene(scene) {    // returns a simple list of Item objects

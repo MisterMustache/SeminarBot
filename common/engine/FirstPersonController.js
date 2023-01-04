@@ -1,6 +1,7 @@
 import { pause, escapePressedOnceExport } from "../../src/seminarbot.js";
 import { quat, vec3 } from '../../lib/gl-matrix-module.js';
 import { removeNodeFromScene } from "../../src/main.js";
+import { AudioPlayer } from "../../src/AudioPlayer.js";
 import { Physics } from "../../src/Physics.js";
 
 export class FirstPersonController {
@@ -34,9 +35,15 @@ export class FirstPersonController {
         this.allowedSpeed = this.maxSpeed * this.sprintToWalkRatio;  // relative speed (if walking or running)
         this.decay = 0.996;
         this.startedSprinting = false;
-        this.sprintDurationMax = 10000;  // max sprint time in milliseconds, before needing to slow down
+        this.sprintDurationMax = 5000;  // max sprint time in milliseconds, before needing to slow down
         this.sprintDuration = this.sprintDurationMax;  // actual sprint time in ms (can change based on 'tiredness')
         this.staminaRecoveryFactor = 1.5;  // how fast stamina is recovered (1.5 means 1.5x faster compared to losing it)
+
+        // audio
+        this.footstepWalkingSound = new AudioPlayer("/common/sounds/footstep2.mp3");
+        this.footstepSprintingSound = new AudioPlayer("/common/sounds/footstep.mp3");
+        this.footstepWalkingSound.volume(20);
+        this.footstepSprintingSound.volume(30);
 
         this.initHandlers();
     }
@@ -108,21 +115,41 @@ export class FirstPersonController {
             vec3.sub(acc, acc, right);
         }
 
-        // sprinting functionality
-        if (this.keys['ShiftLeft']) {
-            if (!this.startedSprinting) {
-                this.allowedSpeed = this.maxSpeed;
-                this.startedSprinting = true;
-                this.time = timeNow;
-            }
-            else {
-                if (this.sprintDuration <= 0) {
-                    this.allowedSpeed = this.maxSpeed * this.sprintToWalkRatio;
-                    this.sprintDuration = 0;
+        // Update velocity based on acceleration.
+        vec3.scaleAndAdd(this.velocity, this.velocity, acc, dt * this.acceleration);
+
+        // If there is no user input, apply decay.
+        if (!this.keys['KeyW'] && !this.keys['KeyS'] && !this.keys['KeyD'] && !this.keys['KeyA']) {
+            const decay = Math.exp(dt * Math.log(1 - this.decay));
+            vec3.scale(this.velocity, this.velocity, decay);
+        }
+        else {
+            // sprinting functionality
+            if (this.keys['ShiftLeft']) {
+                if (!this.startedSprinting) {
+                    this.allowedSpeed = this.maxSpeed;
+                    this.startedSprinting = true;
+                    this.time = timeNow;
                 }
                 else {
-                    this.sprintDuration -= (timeNow - this.time);
+                    if (this.sprintDuration <= 0) {
+                        this.allowedSpeed = this.maxSpeed * this.sprintToWalkRatio;
+                        this.sprintDuration = 0;
+                    }
+                    else {
+                        this.sprintDuration -= (timeNow - this.time);
+                    }
                 }
+                // sound based on sprintDuration (if stamina runs out, then it's normal footstep sound)
+                if (this.sprintDuration > 0) {
+                    this.footstepSprintingSound.play();
+                }
+                else {
+                    this.footstepWalkingSound.play();
+                }
+            }
+            else {
+                this.footstepWalkingSound.play();
             }
         }
 
@@ -137,19 +164,6 @@ export class FirstPersonController {
             if (this.sprintDuration > this.sprintDurationMax) {
                 this.sprintDuration = this.sprintDurationMax;
             }
-        }
-
-        // Update velocity based on acceleration.
-        vec3.scaleAndAdd(this.velocity, this.velocity, acc, dt * this.acceleration);
-
-        // If there is no user input, apply decay.
-        if (!this.keys['KeyW'] &&
-            !this.keys['KeyS'] &&
-            !this.keys['KeyD'] &&
-            !this.keys['KeyA'])
-        {
-            const decay = Math.exp(dt * Math.log(1 - this.decay));
-            vec3.scale(this.velocity, this.velocity, decay);
         }
 
         // Limit speed to prevent accelerating to infinity and beyond.
@@ -211,9 +225,9 @@ export class FirstPersonController {
             }
             for (const item of this.items) {
                 if (!item.pickedUp && Physics.checkCollision(this.node, item.globalInteractionAABB, this.distanceToItemAABB).collision) {
-                    console.log("picked up " + item.node.name);
                     removeNodeFromScene(item.node.name);
-                    item.pickedUp = true;
+                    item.pickup();
+                    console.log("picked up " + item.node.name);
                 }
             }
         }

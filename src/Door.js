@@ -1,4 +1,5 @@
 import { vec3, quat } from "/lib/gl-matrix-module.js";
+import { AudioPlayer } from "./AudioPlayer.js";
 import { Physics } from "./Physics.js";
 
 // used only for detecting a players presence to open doors
@@ -21,16 +22,25 @@ export class Door {
 
         this.globalInteractionAABB = Physics.getTransformedAABB(this.node, localInteractionAABB);
         this.activeCollisionAABB = Physics.getTransformedAABB(this.node, localCollisionAABB);
+
+        this.closeDoorSound = new AudioPlayer("/common/sounds/door_close.mp3");
+        this.openDoorSound = new AudioPlayer("/common/sounds/door_open.mp3");
     }
 
     changeDoorState() {
+        // if opened close the door and play the closing sound
         if (this.opened) {
             this.node.rotation = quat.rotateY(quat.create(), this.node.rotation, -this.angle * (Math.PI / 180));
             this.node.translation = vec3.add(vec3.create(), this.node.translation, [-0.87, 0, -0.21]);
+            this.openDoorSound.stop();
+            this.closeDoorSound.play();
         }
+        // else open the door and play the opening sound
         else {
             this.node.rotation = quat.rotateY(quat.create(), this.node.rotation, this.angle * (Math.PI / 180));
             this.node.translation = vec3.add(vec3.create(), this.node.translation, [0.87, 0, 0.21]);
+            this.closeDoorSound.stop();
+            this.openDoorSound.play();
         }
 
         this.opened = !this.opened;
