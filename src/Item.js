@@ -11,6 +11,7 @@ export class Item {
     constructor(node) {
         this.node = node;
         this.pickedUp = false;
+        this.value = Math.floor(Math.random() * 10);
 
         this.globalInteractionAABB = Physics.getTransformedAABB(this.node, localInteractionAABB);
         this.pickupSound = new AudioPlayer("/common/sounds/pickup_note.mp3");

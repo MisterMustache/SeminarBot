@@ -12,7 +12,7 @@ export let escapePressedOnceExport = {
 
 const startDiv = document.getElementById("startDiv");
 const pauseDiv = document.getElementById("pauseDiv");
-const staminaDiv = document.getElementById('staminaDiv')
+const HUD = document.getElementById('HUD');
 const gameDiv = document.getElementById("gameDiv");
 const loaderDiv = document.getElementById("loaderDiv");
 // const gameCanvas = document.getElementById("gameCanvas");
@@ -22,7 +22,7 @@ const resumeButton = document.getElementById('resumeButton');
 const quitButton = document.getElementById("quitButton");
 
 pauseDiv.style.display = "none";
-staminaDiv.style.display = "none";
+HUD.style.display = "none";
 loaderDiv.style.display = "none";
 gameDiv.style.display = "none";
 
@@ -37,7 +37,7 @@ startButton.addEventListener("click", function() {
     startDiv.style.display = "none";
     gameDiv.style.display = "block";
     loaderDiv.style.display = "block";
-    staminaDiv.style.display = "flex";
+    HUD.style.display = "block";
 
     pause = false;
     // gameCanvas.requestPointerLock();     // locks pointer, but drops framerate for some reason
@@ -46,7 +46,7 @@ startButton.addEventListener("click", function() {
 resumeButton.addEventListener("click", function() {
     pauseDiv.style.display = "none";
     gameDiv.style.display = "block";
-    staminaDiv.style.display = "flex";
+    HUD.style.display = "block";
     pause = false;
     // gameCanvas.requestPointerLock();
 });
@@ -61,7 +61,7 @@ document.addEventListener('keydown', function(event) {
         // if esc was pressed while in game, then get pause menu
         pauseDiv.style.display = "block";
         gameDiv.style.display = "block";
-        staminaDiv.style.display = "flex";
+        HUD.style.display = "block";
         loaderDiv.style.display = "none";
         pause = true;
         escapePressedOnce = false;

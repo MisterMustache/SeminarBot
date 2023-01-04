@@ -146,3 +146,16 @@ gui.close();
 export function removeNodeFromScene(node) {
     app.removeNodeFromScene(node);
 }
+
+export function addToInventory(item) {
+    switch (item.node.name) {
+        case "Item1":
+            app.HUD.slot1Value(item.value); break;
+        case "Item2":
+            app.HUD.slot2Value(item.value); break;
+        case "Item3":
+            app.HUD.slot3Value(item.value); break;
+        case "Item4":
+            app.HUD.slot4Value(item.value);
+    }
+}

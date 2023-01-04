@@ -1,6 +1,6 @@
 import { pause, escapePressedOnceExport } from "../../src/seminarbot.js";
+import { addToInventory, removeNodeFromScene } from "../../src/main.js";
 import { quat, vec3 } from '../../lib/gl-matrix-module.js';
-import { removeNodeFromScene } from "../../src/main.js";
 import { AudioPlayer } from "../../src/AudioPlayer.js";
 import { Physics } from "../../src/Physics.js";
 
@@ -235,8 +235,9 @@ export class FirstPersonController {
             }
             for (const item of this.items) {
                 if (!item.pickedUp && Physics.checkCollision(this.node, item.globalInteractionAABB, this.distanceToItemAABB).collision) {
-                    removeNodeFromScene(item.node.name);
+                    removeNodeFromScene(item.node.name);    // it doesn't get rendered anymore (removed from main scene)
                     item.pickup();
+                    addToInventory(item);
                     console.log("picked up " + item.node.name);
                 }
             }
