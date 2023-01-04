@@ -37,7 +37,11 @@ export class FirstPersonController {
         this.startedSprinting = false;
         this.sprintDurationMax = 5000;  // max sprint time in milliseconds, before needing to slow down
         this.sprintDuration = this.sprintDurationMax;  // actual sprint time in ms (can change based on 'tiredness')
-        this.staminaRecoveryFactor = 1.5;  // how fast stamina is recovered (1.5 means 1.5x faster compared to losing it)
+        this.staminaRecoveryFactor = 0.1;  // how fast stamina is recovered (0.1 means 10x slower compared to losing it)
+        this.actualRecoveryFactor = this.staminaRecoveryFactor;     // changes if user is standing still or walking
+        this.sprintTimeout = 3000;      // time in ms that needs to pass in order to be able to run again (after depleting all stamina)
+        this.sprintTimeoutAt = 0;       // stores time, when the timeout happened
+        this.sprintTimeoutActive = false;
 
         // audio
         this.footstepWalkingSound = new AudioPlayer("/common/sounds/footstep2.mp3");
@@ -87,10 +91,6 @@ export class FirstPersonController {
         });
     }
 
-    refreshTime() {
-        this.time = performance.now();
-    }
-
     update(dt) {
         const timeNow = performance.now();
 
@@ -118,12 +118,14 @@ export class FirstPersonController {
         // Update velocity based on acceleration.
         vec3.scaleAndAdd(this.velocity, this.velocity, acc, dt * this.acceleration);
 
-        // If there is no user input, apply decay.
+        // If there is no user input on WASD, apply decay
         if (!this.keys['KeyW'] && !this.keys['KeyS'] && !this.keys['KeyD'] && !this.keys['KeyA']) {
             const decay = Math.exp(dt * Math.log(1 - this.decay));
             vec3.scale(this.velocity, this.velocity, decay);
+            this.actualRecoveryFactor = this.staminaRecoveryFactor * 5;
         }
         else {
+            this.actualRecoveryFactor = this.staminaRecoveryFactor;
             // sprinting functionality
             if (this.keys['ShiftLeft']) {
                 if (!this.startedSprinting) {
@@ -135,6 +137,10 @@ export class FirstPersonController {
                     if (this.sprintDuration <= 0) {
                         this.allowedSpeed = this.maxSpeed * this.sprintToWalkRatio;
                         this.sprintDuration = 0;
+                        this.sprintTimeoutAt = timeNow;
+                        if (!this.sprintTimeoutActive) {
+                            this.sprintTimeoutActive = true;
+                        }
                     }
                     else {
                         this.sprintDuration -= (timeNow - this.time);
@@ -160,9 +166,13 @@ export class FirstPersonController {
                 this.allowedSpeed = this.maxSpeed * this.sprintToWalkRatio;
                 this.startedSprinting = false;
             }
-            this.sprintDuration += (timeNow - this.time) * this.staminaRecoveryFactor;
-            if (this.sprintDuration > this.sprintDurationMax) {
-                this.sprintDuration = this.sprintDurationMax;
+            // if there is no timeout, then regenerate stamina, else wait "this.staminaTimeout" of ms
+            if (!this.sprintTimeoutActive || timeNow - this.sprintTimeoutAt >= this.sprintTimeout) {
+                this.sprintDuration += (timeNow - this.time) * this.actualRecoveryFactor;
+                if (this.sprintDuration > this.sprintDurationMax) {
+                    this.sprintDuration = this.sprintDurationMax;
+                }
+                this.sprintTimeoutActive = false;
             }
         }
 

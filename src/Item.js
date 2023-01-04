@@ -14,7 +14,7 @@ export class Item {
 
         this.globalInteractionAABB = Physics.getTransformedAABB(this.node, localInteractionAABB);
         this.pickupSound = new AudioPlayer("/common/sounds/pickup_note.mp3");
-        this.pickupSound.volume(50);
+        this.pickupSound.volume(40);
     }
 
     pickup() {

@@ -4,7 +4,7 @@ export class AudioPlayer {
     }
 
     play() {
-        this.audio.play().then(_ => {});
+        this.audio.play().then();
     }
 
     stop() {

@@ -25,6 +25,8 @@ export class Door {
 
         this.closeDoorSound = new AudioPlayer("/common/sounds/door_close.mp3");
         this.openDoorSound = new AudioPlayer("/common/sounds/door_open.mp3");
+        this.closeDoorSound.volume(50);
+        this.openDoorSound.volume(50);
     }
 
     changeDoorState() {

@@ -96,7 +96,7 @@ export class App extends Application {
             this.HUD.staminaPercentage((this.controller.sprintDuration / this.controller.sprintDurationMax) * 100)
         }
         else {
-            this.controller.refreshTime();  // needs to be refreshed, so the stamina bar works properly (relies on time)
+            this.controller.time = performance.now();  // needs to be refreshed, so the stamina bar works properly (relies on time)
         }
     }
 
@@ -138,8 +138,9 @@ movement.add(app.controller, 'maxSpeed', 0, 10);
 movement.add(app.controller, 'decay', 0, 1);
 movement.add(app.controller, 'acceleration', 1, 100);
 movement.add(app.controller, 'sprintDurationMax', 1000, 30000);
-movement.add(app.controller, 'sprintToWalkRatio', 0.01, 1)
-movement.add(app.controller, 'staminaRecoveryFactor', 0.1, 10)
+movement.add(app.controller, 'sprintToWalkRatio', 0.01, 1);
+movement.add(app.controller, 'staminaRecoveryFactor', 0.01, 1);
+movement.add(app.controller, 'sprintTimeout', 0, 10000)
 gui.close();
 
 export function removeNodeFromScene(node) {
