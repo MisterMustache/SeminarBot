@@ -105,16 +105,17 @@ button {
     z-index: 0;
 }
 
-.inventory {
+#inventory {
     position: absolute;
     display: flex;
     top: 3%;
     left: 0;
     right: 0;
     margin: auto;
-    width: 25%;
+    width: 26%;
     height: 9%;
     border: 2px solid #555555;
+    z-index: 0;
 }
 
 .slot {
@@ -138,12 +139,14 @@ button {
     width: 60%;
     height: 5px;
     padding: 0;
+    z-index: 0;
 }
 
 #stamina {
     background-color: rgba(10, 100, 148, 0.8);
     height: 100%;
     width: 100%;
+    border-radius: 2px;
 }
 
 #gameDiv, #loaderDiv {
@@ -205,4 +208,91 @@ a.back:hover {
 @keyframes spin {
     0% { transform: rotate(0deg); }
   100% { transform: rotate(1800deg); }
+}
+
+#codePopup {
+    position: absolute;
+    display: block;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    width: 300px;
+    height: 150px;
+    top: 40%;
+    left: 0;
+    right: 0;
+    margin: auto;
+    z-index: 0;
+}
+
+#codePopup .popup-content {
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    margin: auto;
+    max-width: 400px;
+    padding: 20px;
+    background-color: rgb(38, 38, 38);
+    border: 3px solid #696969;
+    border-radius: 0;
+    color: white;
+}
+
+#codePopup .popup-content input[type=submit] {
+    background-color: #555;
+    color: white;
+    font-size: 16px;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 0;
+}
+
+#codePopup .popup-content input[type=text] {
+    color: white;
+    font-size: 20px;
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    box-sizing: border-box;
+    border: 2px solid rgba(129, 129, 129, 0.8);
+    border-radius: 0;
+    background-color: rgba(70, 70, 70, 0.9);
+    text-align: center;
+}
+
+#codePopup .popup-content input[type=text].error {
+    border: 2px solid red;
+}
+
+#codePopup .popup-content input[type=text]:focus {
+    border: 2px solid #555;
+}
+
+#codePopup .popup-content input[type=submit] {
+    width: 100%;
+    background-color: #555;
+    color: white;
+    padding: 14px 20px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+#codePopup .popup-content input[type=submit]:hover {
+    background-color: #777;
+}
+
+#codePopup .popup-content #closeCodePopup {
+    position: absolute;
+    top: 0;
+    right: 10px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
 }

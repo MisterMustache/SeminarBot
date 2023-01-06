@@ -1,5 +1,6 @@
 export let pause = true;
 let escapePressedOnce = false;      // used only to be able to go back in game after pressing esc in pause menu
+let inFocus = true;    // if the game has your controls (movement, doesn't count for code popup on locked doors)
 
 export let escapePressedOnceExport = {
     get value() {
@@ -10,21 +11,36 @@ export let escapePressedOnceExport = {
     }
 };
 
+export let inFocusExport = {
+    get value() {
+        return inFocus;
+    },
+    set value(newValue) {
+        inFocus = newValue;
+    }
+};
+
 const startDiv = document.getElementById("startDiv");
 const pauseDiv = document.getElementById("pauseDiv");
-const HUD = document.getElementById('HUD');
 const gameDiv = document.getElementById("gameDiv");
 const loaderDiv = document.getElementById("loaderDiv");
-// const gameCanvas = document.getElementById("gameCanvas");
+const gameCanvas = document.getElementById("gameCanvas");
+
+const inventory = document.getElementById('inventory');
+const staminaDiv = document.getElementById("staminaDiv");
+const codePopup = document.getElementById("codePopup");
+const closeCodePopup = document.getElementById("closeCodePopup");
 
 const startButton = document.getElementById("startButton");
-const resumeButton = document.getElementById('resumeButton');
+const resumeButton = document.getElementById("resumeButton");
 const quitButton = document.getElementById("quitButton");
 
 pauseDiv.style.display = "none";
-HUD.style.display = "none";
 loaderDiv.style.display = "none";
 gameDiv.style.display = "none";
+inventory.style.display = "none";
+staminaDiv.style.display = "none";
+codePopup.style.display = "none";
 
 startButton.addEventListener("click", function() {
     // load main.js to start the game
@@ -37,32 +53,36 @@ startButton.addEventListener("click", function() {
     startDiv.style.display = "none";
     gameDiv.style.display = "block";
     loaderDiv.style.display = "block";
-    HUD.style.display = "block";
+    inventory.style.display = "flex";
+    staminaDiv.style.display = "flex";
 
     pause = false;
-    // gameCanvas.requestPointerLock();     // locks pointer, but drops framerate for some reason
+    gameCanvas.requestPointerLock();     // locks pointer, but drops framerate for some reason
 });
 
 resumeButton.addEventListener("click", function() {
     pauseDiv.style.display = "none";
-    gameDiv.style.display = "block";
-    HUD.style.display = "block";
     pause = false;
-    // gameCanvas.requestPointerLock();
+    if (inFocus) {
+        gameCanvas.requestPointerLock();
+    }
 });
 
 quitButton.addEventListener("click", function() {
     location.reload();      // simply reload (big brain solution)
 });
 
+closeCodePopup.addEventListener("click", function() {
+    codePopup.style.display = "none";
+    inFocus = true;
+    gameCanvas.requestPointerLock();
+});
+
 document.addEventListener('keydown', function(event) {
     // if game was started and escape button was pressed
-    if (gameDiv.style.display === "block" && event.key === 'Escape' && !pause) {
+    if (event.key === 'Escape' && !pause) {
         // if esc was pressed while in game, then get pause menu
         pauseDiv.style.display = "block";
-        gameDiv.style.display = "block";
-        HUD.style.display = "block";
-        loaderDiv.style.display = "none";
         pause = true;
         escapePressedOnce = false;
     }

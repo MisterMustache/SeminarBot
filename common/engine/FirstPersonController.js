@@ -1,4 +1,4 @@
-import { pause, escapePressedOnceExport } from "../../src/seminarbot.js";
+import { escapePressedOnceExport, inFocusExport } from "../../src/seminarbot.js";
 import { addToInventory, removeNodeFromScene } from "../../src/main.js";
 import { quat, vec3 } from '../../lib/gl-matrix-module.js';
 import { AudioPlayer } from "../../src/AudioPlayer.js";
@@ -14,7 +14,6 @@ export class FirstPersonController {
         this.items = items;
 
         // current state
-        this.inFocus = false;
         this.keys = {};
         this.time = 0;      // gets refreshed in every update call
 
@@ -37,7 +36,7 @@ export class FirstPersonController {
         this.startedSprinting = false;
         this.sprintDurationMax = 5000;  // max sprint time in milliseconds, before needing to slow down
         this.sprintDuration = this.sprintDurationMax;  // actual sprint time in ms (can change based on 'tiredness')
-        this.staminaRecoveryFactor = 0.1;  // how fast stamina is recovered (0.1 means 10x slower compared to losing it)
+        this.staminaRecoveryFactor = 0.15;  // how fast stamina is recovered (0.1 means 10x slower compared to losing it)
         this.actualRecoveryFactor = this.staminaRecoveryFactor;     // changes if user is standing still or walking
         this.sprintTimeout = 3000;      // time in ms that needs to pass in order to be able to run again (after depleting all stamina)
         this.sprintTimeoutAt = 0;       // stores time, when the timeout happened
@@ -52,6 +51,16 @@ export class FirstPersonController {
         this.initHandlers();
     }
 
+    regainFocus() {
+        inFocusExport.value = true;
+        this.domElement.requestPointerLock();
+    }
+
+    removeFocus() {
+        inFocusExport.value = false;
+        document.exitPointerLock();
+    }
+
     initHandlers() {
         const resumeButton = document.getElementById('resumeButton');
 
@@ -63,30 +72,29 @@ export class FirstPersonController {
         const doc = element.ownerDocument;
 
         // event for the escape key being pressed
-        const escapeKey = new KeyboardEvent("keydown", {
+        const escapeKeyEvent = new KeyboardEvent("keydown", {
             bubbles: true,
             cancelable: true,
             key: 'Escape'
         });
 
+        doc.addEventListener('pointermove', this.pointermoveHandler);
         doc.addEventListener('keydown', this.keydownHandler);
         doc.addEventListener('keyup', this.keyupHandler);
 
         element.addEventListener('click', _ =>  {
-            element.requestPointerLock();
-            this.inFocus = true;
+            resumeButton.click();   // would be the same as clicking the resume button
         });
 
         doc.addEventListener('pointerlockchange', _ => {
             if (doc.pointerLockElement === element) {
                 doc.addEventListener('pointermove', this.pointermoveHandler);
-                resumeButton.click();   // would be the same as clicking the resume button
-                this.inFocus = false;
             } else {
-                doc.removeEventListener('pointermove', this.pointermoveHandler);
-                document.dispatchEvent(escapeKey);  // simulate pressing escape key again to get pause menu
-                escapePressedOnceExport.value = true;           // correct this variable, if game was in focus
-                this.inFocus = false;
+                this.domElement.ownerDocument.removeEventListener('pointermove', this.pointermoveHandler);
+                if (inFocusExport.value) {
+                    document.dispatchEvent(escapeKeyEvent);     // simulate pressing escape key again to get pause menu
+                    escapePressedOnceExport.value = true;       // correct this variable, if game was in focus
+                }
             }
         });
     }
@@ -102,24 +110,26 @@ export class FirstPersonController {
 
         // Map user input to the acceleration vector.
         const acc = vec3.create();
-        if (this.keys['KeyW']) {
-            vec3.add(acc, acc, forward);
-        }
-        if (this.keys['KeyS']) {
-            vec3.sub(acc, acc, forward);
-        }
-        if (this.keys['KeyD']) {
-            vec3.add(acc, acc, right);
-        }
-        if (this.keys['KeyA']) {
-            vec3.sub(acc, acc, right);
+        if (inFocusExport.value) {
+            if (this.keys['KeyW']) {
+                vec3.add(acc, acc, forward);
+            }
+            if (this.keys['KeyS']) {
+                vec3.sub(acc, acc, forward);
+            }
+            if (this.keys['KeyD']) {
+                vec3.add(acc, acc, right);
+            }
+            if (this.keys['KeyA']) {
+                vec3.sub(acc, acc, right);
+            }
         }
 
         // Update velocity based on acceleration.
         vec3.scaleAndAdd(this.velocity, this.velocity, acc, dt * this.acceleration);
 
         // If there is no user input on WASD, apply decay
-        if (!this.keys['KeyW'] && !this.keys['KeyS'] && !this.keys['KeyD'] && !this.keys['KeyA']) {
+        if (!inFocusExport.value || (!this.keys['KeyW'] && !this.keys['KeyS'] && !this.keys['KeyD'] && !this.keys['KeyA'])) {
             const decay = Math.exp(dt * Math.log(1 - this.decay));
             vec3.scale(this.velocity, this.velocity, decay);
             this.actualRecoveryFactor = this.staminaRecoveryFactor * 5;
@@ -220,14 +230,8 @@ export class FirstPersonController {
     keydownHandler(e) {
         this.keys[e.code] = true;
 
-        // only gets requested once after getting from paused state (either by clicking or pressing any button)
-        if (!this.inFocus && !pause) {
-            this.domElement.requestPointerLock();
-            this.inFocus = true;
-        }
-
         // door and item interaction
-        if (this.keys['KeyE']) {
+        if (this.keys['KeyE'] && inFocusExport.value) {
             for (const door of this.doors) {
                 if (Physics.checkCollision(this.node, door.globalInteractionAABB, this.distanceToDoorAABB).collision) {
                     door.changeDoorState();

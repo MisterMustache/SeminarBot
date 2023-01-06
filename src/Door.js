@@ -1,5 +1,6 @@
 import { vec3, quat } from "/lib/gl-matrix-module.js";
 import { AudioPlayer } from "./AudioPlayer.js";
+import { codeInputPopup } from "./main.js";
 import { Physics } from "./Physics.js";
 
 // used only for detecting a players presence to open doors
@@ -17,8 +18,9 @@ const localCollisionAABB = {
 export class Door {
     constructor(node) {
         this.node = node;
-        this.opened = false;
         this.angle = 160;
+        this.unlocked = true;
+        this.opened = false;
 
         this.globalInteractionAABB = Physics.getTransformedAABB(this.node, localInteractionAABB);
         this.activeCollisionAABB = Physics.getTransformedAABB(this.node, localCollisionAABB);
@@ -30,29 +32,42 @@ export class Door {
     }
 
     changeDoorState() {
-        // if opened close the door and play the closing sound
-        if (this.opened) {
-            this.node.rotation = quat.rotateY(quat.create(), this.node.rotation, -this.angle * (Math.PI / 180));
-            this.node.translation = vec3.add(vec3.create(), this.node.translation, [-0.87, 0, -0.21]);
-            this.openDoorSound.stop();
-            this.closeDoorSound.play();
-        }
-        // else open the door and play the opening sound
-        else {
-            this.node.rotation = quat.rotateY(quat.create(), this.node.rotation, this.angle * (Math.PI / 180));
-            this.node.translation = vec3.add(vec3.create(), this.node.translation, [0.87, 0, 0.21]);
-            this.closeDoorSound.stop();
-            this.openDoorSound.play();
-        }
+        if (this.unlocked) {
+            // if opened close the door and play the closing sound
+            if (this.opened) {
+                this.node.rotation = quat.rotateY(quat.create(), this.node.rotation, -this.angle * (Math.PI / 180));
+                this.node.translation = vec3.add(vec3.create(), this.node.translation, [-0.87, 0, -0.21]);
+                this.openDoorSound.stop();
+                this.closeDoorSound.play();
+            }
+            // else open the door and play the opening sound
+            else {
+                this.node.rotation = quat.rotateY(quat.create(), this.node.rotation, this.angle * (Math.PI / 180));
+                this.node.translation = vec3.add(vec3.create(), this.node.translation, [0.87, 0, 0.21]);
+                this.closeDoorSound.stop();
+                this.openDoorSound.play();
+            }
 
-        this.opened = !this.opened;
-        this.node.updateTransformationMatrix();
-        this.activeCollisionAABB = Physics.getTransformedAABB(this.node, localCollisionAABB);   // change collision box
+            this.opened = !this.opened;
+            this.node.updateTransformationMatrix();
+            this.activeCollisionAABB = Physics.getTransformedAABB(this.node, localCollisionAABB);   // change collision box
+        }
+        else {
+            codeInputPopup();     // gets a popup
+        }
     }
 
-    static createDoorsFromScene(scene) {    // simple list of Door objects, that have multiple AABB and current state
+    unlockDoor() {
+        this.unlocked = true;
+    }
+
+    lockDoor() {
+        this.unlocked = false;
+    }
+
+    static createDoorsFromScene(doorScene) {    // simple list of Door objects, that have multiple AABB and current state
         let doors = [];
-        for (const node of scene.nodes) {
+        for (const node of doorScene.nodes) {
             doors.push(new Door(node));
         }
         return doors;

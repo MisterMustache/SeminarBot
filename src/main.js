@@ -11,6 +11,14 @@ import { HUD } from "./HUD.js";
 
 export class App extends Application {
 
+    getEndCode() {
+        let code = "";
+        for (const item of this.items) {
+            code += item.value;
+        }
+        return code;
+    }
+
     async loadWorld() {
         this.loader = new GLTFLoader();
 
@@ -32,6 +40,9 @@ export class App extends Application {
         // transform to Door and Item objects
         this.doors = Door.createDoorsFromScene(this.doors);
         this.items = Item.createItemsFromScene(this.items);
+        this.doors[0].lockDoor();       // lock the end door
+        this.code = this.getEndCode();
+        console.log("end code: " + this.code);
     }
 
     removeNodeFromScene(nodeName) {
@@ -81,6 +92,17 @@ export class App extends Application {
         console.log("Loaded nodes:")
         for(const node of this.scene.nodes) {
             console.log(node.name)
+        }
+    }
+
+    validateCode() {
+        if (this.code === this.HUD.inputCode.value) {
+            this.doors[0].unlockDoor();
+            this.doors[0].changeDoorState();
+            document.getElementById("closeCodePopup").click();  // close the popup
+        }
+        else {
+            this.HUD.inputCode.classList.add("error");
         }
     }
 
@@ -158,4 +180,17 @@ export function addToInventory(item) {
         case "Item4":
             app.HUD.slot4Value(item.value);
     }
+}
+
+export function codeInputPopup() {
+    app.HUD.codeInputPopup();
+    app.controller.removeFocus();
+}
+
+export function validateCode() {
+    app.validateCode();
+}
+
+export function regainFocus() {
+    this.controller.regainFocus();
 }
