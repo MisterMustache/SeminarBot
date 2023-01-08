@@ -30,7 +30,7 @@ export class FirstPersonController {
         this.isMoving = false;
         this.velocity = [0, 0, 0];
         this.acceleration = 20;
-        this.maxSpeed = 5;              // absolute max speed while sprinting
+        this.maxSpeed = 6;              // absolute max speed while sprinting
         this.sprintToWalkRatio = 0.6;
         this.allowedSpeed = this.maxSpeed * this.sprintToWalkRatio;  // relative speed (if walking or running)
         this.decay = 0.996;
@@ -245,7 +245,6 @@ export class FirstPersonController {
                     removeNodeFromScene(item.node.name);    // it doesn't get rendered anymore (removed from main scene)
                     item.pickup();
                     addToInventory(item);
-                    console.log("picked up " + item.node.name);
                 }
             }
         }

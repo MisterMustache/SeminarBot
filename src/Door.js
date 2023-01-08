@@ -10,6 +10,10 @@ export class Door {
         this.opened = false;
         this.right = true;          // if true it opens to the right, if not then left
 
+        // all nodes are normalized, thus we don't have the rotation matrix, so we acknowledge rotation by name
+        this.isRotated = !!this.node.name.includes("rotated");
+        this.isBroken = !!this.node.name.includes("broken");
+
         this.forbidden = false;     // if true, then the door is stationary forever
         this.forbiddenPopup = document.getElementById("forbiddenPopup");
 
@@ -18,9 +22,20 @@ export class Door {
             min: [-0.5, -1.05, -0.5]
         };
         this.localCollisionAABB = {
-            max: [0.45, 1.05, 0.025],
-            min: [-0.45, -1.05, -0.025]
+            max: [0.45, 2.1, 0.025],
+            min: [-0.45, 0, -0.025]
         };
+
+        // offsetting the door by half it's length and rotating if necessary (gltf got broken a bit)
+        let offset = this.isBroken ? -0.45 : 0.45;
+        if (this.isRotated) {
+            this.node.rotation = quat.rotateY(quat.create(), this.node.rotation, 90 * (Math.PI / 180));
+            this.node.translation = vec3.add(vec3.create(), this.node.translation, [0, 0, offset]);   // z-axis offset
+        }
+        else {
+            this.node.translation = vec3.add(vec3.create(), this.node.translation, [-offset, 0, 0]);   // x-axis offset
+        }
+        this.node.updateTransformationMatrix();
 
         this.updateBehaviour();
         this.updateGlobalAABB();
@@ -33,19 +48,17 @@ export class Door {
     }
 
     updateBehaviour() {
-        const rot = this.node.rotation;
-
         // how the door moves (if door isn't rotated or is rotated by 90 degrees in the beginning)
         this.angle = 160;
-        if (rot[0] === 0 && rot[1] === 0 && rot[2] === 0 && rot[3] === 1) {     // door is not rotated
-            this.movementVector = [0.87, 0, 0.21];
+        if (!this.isRotated) {     // door is not rotated
+            this.movementVector = [0.9, 0, 0.21];
             if (!this.right) {
                 this.movementVector[0] = -this.movementVector[0];
                 this.angle = -this.angle;
             }
         }
         else {
-            this.movementVector = [0.21, 0, -0.87];
+            this.movementVector = [0.21, 0, -0.9];
             if (!this.right) {
                 this.movementVector[2] = -this.movementVector[2];
                 this.angle = -this.angle;
