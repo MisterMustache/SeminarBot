@@ -3,8 +3,8 @@ import { Physics } from "./Physics.js";
 
 // used only for detecting if player is near the item
 const localInteractionAABB = {
-    max: [0.25, 24.67, 0.25],
-    min: [-0.25, -0.33, 0.25]
+    max: [0.30, 10, 0.30],
+    min: [-0.30, -5, -0.30]
 };
 
 export class Item {
@@ -25,10 +25,12 @@ export class Item {
         }
     }
 
-    static createItemsFromScene(scene) {    // returns a simple list of Item objects
+    static getItemsFromScene(scene) {    // returns a simple list of Item objects
         let items = [];
         for (const node of scene.nodes) {
-            items.push(new Item(node));
+            if (node.name.includes("Listic")) {
+                items.push(new Item(node));
+            }
         }
         return items;
     }
