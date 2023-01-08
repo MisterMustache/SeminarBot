@@ -2,12 +2,11 @@ import { vec3 } from "../lib/gl-matrix-module.js";
 
 export class Physics {
 
-    constructor(scene, controller, fixedAABBs, doors, items) {
+    constructor(scene, controller, fixedAABBs, doors) {
         this.scene = scene;
         this.controller = controller;
         this.fixedAABBs = fixedAABBs;   // every AABB that is static and used for actual collision
         this.doors = doors;
-        this.items = items;
         this.collisionRadius = 0.3;
     }
 
@@ -57,20 +56,17 @@ export class Physics {
     }
 
     update() {
-        if (this.controller.velocity !== undefined) {
-            // check camera sphere against every other AABB
-            for (const aabb of this.fixedAABBs) {
-                Physics.resolveCollision(this.controller.node, aabb, this.collisionRadius)
-            }
-            for (const door of this.doors) {
-                Physics.resolveCollision(this.controller.node, door.activeCollisionAABB, this.collisionRadius)
-            }
+        // check camera sphere against every other AABB
+        for (const aabb of this.fixedAABBs) {
+            Physics.resolveCollision(this.controller.node, aabb, this.collisionRadius)
+        }
+        for (const door of this.doors) {
+            Physics.resolveCollision(this.controller.node, door.globalCollisionAABB, this.collisionRadius)
         }
     }
 
-    static getTransformedAABB(node, aabb) {
+    static getTransformedAABB(transform, aabb) {
         // Transform all vertices of the AABB from local to global space.
-        const transform = node.globalMatrix;
         const { min, max } = aabb;
         const vertices = [
             [min[0], min[1], min[2]],
