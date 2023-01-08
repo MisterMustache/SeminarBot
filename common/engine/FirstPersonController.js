@@ -27,6 +27,7 @@ export class FirstPersonController {
         this.distanceToItemAABB = 0.5;
 
         // movement speed
+        this.isMoving = false;
         this.velocity = [0, 0, 0];
         this.acceleration = 20;
         this.maxSpeed = 5;              // absolute max speed while sprinting
@@ -133,9 +134,11 @@ export class FirstPersonController {
             const decay = Math.exp(dt * Math.log(1 - this.decay));
             vec3.scale(this.velocity, this.velocity, decay);
             this.actualRecoveryFactor = this.staminaRecoveryFactor * 5;
+            this.isMoving = false;
         }
         else {
             this.actualRecoveryFactor = this.staminaRecoveryFactor;
+            this.isMoving = true;
             // sprinting functionality
             if (this.keys['ShiftLeft']) {
                 if (!this.startedSprinting) {
@@ -169,8 +172,8 @@ export class FirstPersonController {
             }
         }
 
-        // if stop sprinting
-        if (!this.keys['ShiftLeft']) {
+        // if there is no movement, restore stamina
+        if (!this.isMoving || !this.keys['ShiftLeft']) {
             // if stopped right after sprinting (only gets executed once)
             if (this.startedSprinting) {
                 this.allowedSpeed = this.maxSpeed * this.sprintToWalkRatio;

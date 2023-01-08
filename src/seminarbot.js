@@ -1,6 +1,15 @@
-export let pause = true;
+let pause = true;
 let escapePressedOnce = false;      // used only to be able to go back in game after pressing esc in pause menu
 let inFocus = true;    // if the game has your controls (movement, doesn't count for code popup on locked doors)
+
+export let pauseExport = {
+    get value() {
+      return pause;
+    },
+    set value(newValue) {
+      pause = newValue;
+    }
+};
 
 export let escapePressedOnceExport = {
     get value() {
@@ -36,11 +45,6 @@ const resumeButton = document.getElementById("resumeButton");
 const quitButton = document.getElementById("quitButton");
 
 pauseDiv.style.display = "none";
-loaderDiv.style.display = "none";
-gameDiv.style.display = "none";
-inventory.style.display = "none";
-staminaDiv.style.display = "none";
-codePopup.style.display = "none";
 
 startButton.addEventListener("click", function() {
     // load main.js to start the game
