@@ -72,6 +72,7 @@ export class Door {
     }
 
     changeDoorState() {
+        console.log(this.node.name)
         if (!this.forbidden) {
             if (this.unlocked) {
                 // if opened close the door and play the closing sound
