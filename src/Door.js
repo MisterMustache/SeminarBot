@@ -112,7 +112,7 @@ export class Door {
     static getDoorsFromScene(scene) {    // simple list of Door objects, that have multiple AABB and current state
         let doors = [];
         for (const node of scene.nodes) {
-            if (node.name === "Vrata") {
+            if (node.name.includes("Vrata")) {
                 doors.push(new Door(node));
             }
         }

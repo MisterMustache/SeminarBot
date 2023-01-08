@@ -139,6 +139,22 @@ button {
     z-index: -1;
 }
 
+#endgameDiv {
+    display: none;
+}
+
+#pauseDiv {
+    display: none;
+}
+
+#endgameDiv .game-menu {
+    height: 100px;
+}
+
+#pauseDiv .game-menu {
+    height: 300px;
+}
+
 .version-overlay {
     position: absolute;
     bottom: 0;

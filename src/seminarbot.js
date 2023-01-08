@@ -44,8 +44,6 @@ const startButton = document.getElementById("startButton");
 const resumeButton = document.getElementById("resumeButton");
 const quitButton = document.getElementById("quitButton");
 
-pauseDiv.style.display = "none";
-
 startButton.addEventListener("click", function() {
     // load main.js to start the game
     const script = document.createElement("script");

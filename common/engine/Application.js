@@ -8,6 +8,7 @@ export class Application {
     }
 
     async init() {
+        this.finished = false;
         await this.start();
         requestAnimationFrame(this._update);
     }
@@ -25,10 +26,12 @@ export class Application {
     }
 
     _update() {
-        this._resize();
-        this.update();
-        this.render();
-        requestAnimationFrame(this._update);
+        if (!this.finished) {
+            this._resize();
+            this.update();
+            this.render();
+            requestAnimationFrame(this._update);
+        }
     }
 
     _resize() {

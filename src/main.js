@@ -1,6 +1,8 @@
 import { FirstPersonController } from "/common/engine/FirstPersonController.js";
 import { Application } from '../common/engine/Application.js';
+import { mat4, quat } from "../lib/gl-matrix-module.js";
 import { pauseExport } from "/src/seminarbot.js";
+import { AudioPlayer } from "./AudioPlayer.js";
 import { GLTFLoader } from './GLTFLoader.js';
 import { GUI } from "/lib/dat.gui.module.js";
 import { Renderer } from './Renderer.js';
@@ -63,6 +65,11 @@ export class App extends Application {
             throw new Error('Camera node does not contain a camera reference');
         }
 
+        // self-explanatory, you win the game if you collide with it
+        const winningGlobalMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.create(),[-3.55, 1.25, 4.5], [1, 1, 1]);
+        this.winningAABB = { max: [0.25, 1.25, 0.25], min: [-0.25, -1.25, -0.25]};              // local
+        this.winningAABB = Physics.getTransformedAABB(winningGlobalMatrix, this.winningAABB);   // global
+
         // list of every fixed AABB for collision (Axis-Aligned Bounding Box)
         this.fixedAABBs = [{ max: [-4, 2.5, 5.086603], min: [-4.086603, 0, -5.086603]},     // Left wall
                       { max: [4.086603, 2.5, 5.086603], min: [4, 0, -5.086603]},            // Right wall
@@ -113,6 +120,13 @@ export class App extends Application {
             this.controller.update(dt);
             this.physics.update();
             this.HUD.staminaPercentage((this.controller.sprintDuration / this.controller.sprintDurationMax) * 100);
+            if (Physics.checkCollision(this.controller.node, this.winningAABB, 0.25).collision) {
+                document.getElementById("endgameDiv").style.display = "block";
+                new AudioPlayer("/common/sounds/win.mp3").play();
+                console.log("YOU WON THE GAME");
+                this.controller.removeFocus();
+                this.finished = true;
+            }
         }
         else {
             this.controller.time = performance.now();  // needs to be refreshed, so the stamina bar works properly (relies on time)
