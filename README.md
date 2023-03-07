@@ -5,4 +5,4 @@ Seminarska naloga pri predmetu Računalniška grafika v obliki WebGL videoigre. 
 
 Notes before archival:
  - Project is hereby abandoned (at least temporarily)
- - Latest version is v0.7.0-alpha realest on 2023-01-08
+ - Latest version is v0.7.0-alpha released on 2023-01-08
